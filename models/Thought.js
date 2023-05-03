@@ -21,12 +21,12 @@ const reactionSchema = new Schema(
     createdAt: {
       type: Date,
       default: `${month}, ${day}, ${year}`,
-      //   get: Date.now(),
+      get: () => new Date(),
     },
   },
   {
     toJSON: {
-      //   getters: true,
+      getters: true,
     },
     id: false,
   }
@@ -43,7 +43,7 @@ const thoughtSchema = new Schema(
     createdAt: {
       type: Date,
       default: `${month}, ${day}, ${year}`,
-      //   get: new Date(),
+      get: () => new Date(),
     },
     username: {
       type: String,
@@ -54,6 +54,7 @@ const thoughtSchema = new Schema(
   {
     toJSON: {
       virtuals: true,
+      getters: true,
     },
   }
 );
