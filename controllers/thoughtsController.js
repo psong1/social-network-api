@@ -1,5 +1,4 @@
 const { Thought, User } = require("../models");
-const { rawListeners } = require("../models/User");
 
 module.exports = {
   // Get all thoughts
@@ -45,8 +44,8 @@ module.exports = {
           { new: true }
         );
       })
-      .then((thoughtData) => {
-        if (!thoughtData) {
+      .then((userData) => {
+        if (!userData) {
           res.status(404).json({
             message: "Thought created but user not found with this id.",
           });
@@ -88,8 +87,8 @@ module.exports = {
           { new: true }
         );
       })
-      .then((thoughtData) => {
-        if (!thoughtData) {
+      .then((userData) => {
+        if (!userData) {
           res.status(404).json({
             message: "Thought deleted but no user found with this id.",
           });

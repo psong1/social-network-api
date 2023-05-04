@@ -4,6 +4,10 @@ module.exports = {
   // Gets all users
   getAllUsers(req, res) {
     User.find({})
+      .populate({
+        path: "friends",
+        select: "-__v",
+      })
       .select("-__v")
       .sort({ _id: -1 })
       .then((users) => res.json(users))
