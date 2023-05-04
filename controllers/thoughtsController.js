@@ -1,9 +1,16 @@
 const { Thought, User } = require("../models");
+const { rawListeners } = require("../models/User");
 
 module.exports = {
   // Get all thoughts
   getThoughts(req, res) {
     Thought.find({})
+      .populate({
+        path: "reactions",
+        select: "-__v",
+      })
+      .select("-__v")
+      .sort({ _id: -1 })
       .then((thoughts) => res.json(thoughts))
       .catch((err) => res.status(500).json(err));
   },
@@ -11,6 +18,12 @@ module.exports = {
   // Get a single thought
   getSingleThought(req, res) {
     Thought.findOne({ _id: req.params.id })
+      .populate({
+        path: "reactions",
+        select: "-__v",
+      })
+      .select("-__v")
+      .sort({ _id: -1 })
       .then((thoughtData) => {
         if (!thoughtData) {
           return res
@@ -23,8 +36,8 @@ module.exports = {
   },
 
   // Create a thought
-  createThought(req, res) {
-    Thought.create(req.body)
+  createThought({ body }, res) {
+    Thought.create(body)
       .then(({ _id }) => {
         return User.findOneAndUpdate(
           { _id: body.userId },
@@ -34,9 +47,10 @@ module.exports = {
       })
       .then((thoughtData) => {
         if (!thoughtData) {
-          return res.status(404).json({
+          res.status(404).json({
             message: "Thought created but user not found with this id.",
           });
+          return;
         }
         res.json({ message: "Thought successfully created." });
       })
@@ -44,10 +58,10 @@ module.exports = {
   },
 
   // Update thought by id
-  updateThought(req, res) {
+  updateThought({ params, body }, res) {
     Thought.findByIdAndUpdate(
-      { _id: req.params.id },
-      { $set: req.body },
+      { _id: params.id },
+      { $set: body },
       { runValidators: true, new: true }
     )
       .then((thoughtData) => {
@@ -62,15 +76,15 @@ module.exports = {
   },
 
   // Delete thought by id
-  deleteThought(req, res) {
-    Thought.findOneAndRemove({ _id: req.params.id })
+  deleteThought({ params }, res) {
+    Thought.findOneAndRemove({ _id: params.id })
       .then((thoughtData) => {
         if (!thoughtData) {
           res.status(404).json({ message: "No thought found with this id." });
         }
         User.findOneAndUpdate(
-          { thoughts: req.params.id },
-          { $pull: { thoughts: req.params.id } },
+          { _id: params.id },
+          { $pull: { thoughts: params.id } },
           { new: true }
         );
       })
@@ -86,12 +100,14 @@ module.exports = {
   },
 
   // Add a reaction
-  addReaction(req, res) {
+  addReaction({ params, body }, res) {
     Thought.findOneAndUpdate(
-      { _id: req.params.thoughtId },
+      { _id: params.thoughtId },
       { $addToSet: { reactions: body } },
       { runValidators: true, new: true }
     )
+      .populate({ path: "reactions", select: "-__v" })
+      .select("-__v")
       .then((thoughtData) => {
         if (!thoughtData) {
           res.status(404).json({ message: "No thought with this id." });
@@ -103,9 +119,9 @@ module.exports = {
   },
 
   // Delete a reaction
-  removeReaction(req, res) {
+  removeReaction({ params }, res) {
     Thought.findByIdAndRemove(
-      { _id: req.params.thoughtId },
+      { _id: params.thoughtId },
       { $pull: { reaction: { reactionId: params.reactionId } } },
       { new: true }
     )
